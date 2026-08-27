@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&display=swap" />
+<style>
+  html, body { margin: 0; padding: 0; background: #ffffff; }
+  * { box-sizing: border-box; }
+  input, button, select { font-family: inherit; }
+  a { color: #0a0a0a; text-decoration: none; }
+  a:hover { color: #45515e; }
+  input:focus { outline: none; border-color: #1d4ed8 !important; box-shadow: 0 0 0 1px #1d4ed8; }
+  .nav-desktop { display: flex; align-items: center; gap: 8px; }
+  .burger-btn { display: none; }
+  .nav-mobile { display: none; }
+  @media (max-width: 720px) {
+    .nav-desktop { display: none; }
+    .burger-btn { display: inline-flex; }
+    .nav-mobile.is-open { display: flex; }
+  }
+  @media (max-width: 640px) {
+    .stack-mobile { flex-direction: column !important; align-items: stretch !important; }
+    .stack-mobile > * { width: 100% !important; flex: 1 1 auto !important; }
+  }
+  input[type="date"] { font-size: 15px; }
+  @media (max-width: 480px) {
+    input[type="date"] { font-size: 13px !important; padding-left: 10px !important; padding-right: 6px !important; }
+  }
+</style>
+</helmet>
+<div style="font-family: 'DM Sans', Inter, Helvetica, Arial, sans-serif; color: #0a0a0a; min-height: 100vh; background: #ffffff; -webkit-font-smoothing: antialiased;">
+
+  <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; padding: 0 clamp(14px, 4vw, 32px); border-bottom: 1px solid #eaecf0; position: sticky; top: 0; background: #ffffff; z-index: 10;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 22px; height: 22px; border-radius: 6px; background: #533A71;"></div>
+      <span style="font-size: 16px; font-weight: 700; letter-spacing: -0.3px;">LAN Party</span>
+    </div>
+    <div class="nav-desktop">
+      <button onClick="{{ goHome }}" style="background: transparent; border: 0; cursor: pointer; font-size: 14px; font-weight: 500; color: #5f5f5f; padding: 8px 12px; border-radius: 9999px;" style-hover="{background: '#f7f8fa', color: '#0a0a0a'}">Accueil</button>
+      <button onClick="{{ goAdmin }}" style="background: transparent; border: 0; cursor: pointer; font-size: 14px; font-weight: 500; color: #5f5f5f; padding: 8px 12px; border-radius: 9999px;" style-hover="{background: '#f7f8fa', color: '#0a0a0a'}">Espace admin</button>
+      <button onClick="{{ goInvite }}" style="background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 11px 20px; border-radius: 9999px;" style-hover="{background: '#422e5b'}">Vue joueur</button>
+    </div>
+    <button class="burger-btn" onClick="{{ toggleMenu }}" aria-label="Menu" style="align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 9999px; border: 1px solid #e5e7eb; background: #ffffff; cursor: pointer; padding: 0; font-size: 18px; line-height: 1; color: #0a0a0a;">{{ menuIcon }}</button>
+  </div>
+  <sc-if value="{{ menuOpen }}">
+    <div class="nav-mobile is-open" style="flex-direction: column; align-items: stretch; gap: 4px; position: sticky; top: 64px; z-index: 9; background: #ffffff; border-bottom: 1px solid #eaecf0; padding: 8px clamp(14px, 4vw, 32px) 16px;">
+      <button onClick="{{ goHome }}" style="width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; font-size: 15px; font-weight: 500; color: #5f5f5f; padding: 12px 8px; border-radius: 8px;">Accueil</button>
+      <button onClick="{{ goAdmin }}" style="width: 100%; text-align: left; background: transparent; border: 0; cursor: pointer; font-size: 15px; font-weight: 500; color: #5f5f5f; padding: 12px 8px; border-radius: 8px;">Espace admin</button>
+      <button onClick="{{ goInvite }}" style="width: 100%; text-align: left; background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 15px; font-weight: 600; padding: 12px 16px; border-radius: 9999px; margin-top: 4px;">Vue joueur</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}">
+    <div style="max-width: 1080px; margin: 12px auto 0; padding: 0 clamp(14px, 4vw, 32px);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; border-radius: 12px; padding: 12px 16px; font-size: 14px;">
+        <span>{{ actionError }}</span>
+        <button onClick="{{ dismissError }}" style="background: transparent; border: 0; cursor: pointer; color: #b91c1c; font-size: 16px; line-height: 1;">✕</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLoading }}">
+    <div style="max-width: 480px; margin: 0 auto; padding: 120px 24px; text-align: center; color: #8e8e93; font-size: 14px;">Chargement…</div>
+  </sc-if>
+
+  <sc-if value="{{ isNotFound }}">
+    <div style="max-width: 480px; margin: 0 auto; padding: 120px 24px; text-align: center;">
+      <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">LAN introuvable</div>
+      <p style="font-size: 14px; color: #5f5f5f; margin: 0 0 20px;">Ce lien ne correspond à aucune LAN active (elle a peut-être été réinitialisée).</p>
+      <button onClick="{{ goHome }}" style="background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px;" style-hover="{background: '#422e5b'}">Retour à l'accueil</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width: 1080px; margin: 0 auto; padding: clamp(40px, 8vw, 96px) clamp(16px, 4vw, 32px) 96px;">
+      <div style="display: flex; align-items: flex-start; gap: clamp(32px, 5vw, 64px); flex-wrap: wrap;">
+        <div style="flex: 1 1 360px; min-width: 0;">
+          <div style="display: inline-block; background: #e8ffea; color: #1ba673; font-size: 13px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; margin-bottom: 24px;">Nouvelle LAN</div>
+          <h1 style="font-size: clamp(40px, 9vw, 72px); font-weight: 600; line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 20px;">Organisez la<br /><span style="color: #ff5530;">prochaine LAN.</span></h1>
+          <p style="font-size: 18px; font-weight: 500; line-height: 1.5; color: #5f5f5f; margin: 0; max-width: 420px; text-wrap: pretty;">Choisissez une date et un jeu, envoyez le lien, et laissez le tirage au sort composer deux équipes équilibrées.</p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-top: clamp(32px, 6vw, 56px); max-width: 440px;">
+            <div style="background: #ff5530; color: #ffffff; border-radius: 20px; padding: 20px;">
+              <div style="font-size: 34px; font-weight: 600; letter-spacing: -1px; line-height: 1.2;">{{ prixPizza }}€</div>
+              <div style="font-size: 13px; opacity: 0.85;">avec pizza</div>
+            </div>
+            <div style="background: #1456f0; color: #ffffff; border-radius: 20px; padding: 20px;">
+              <div style="font-size: 34px; font-weight: 600; letter-spacing: -1px; line-height: 1.2;">{{ prixSans }}€</div>
+              <div style="font-size: 13px; opacity: 0.85;">sans pizza</div>
+            </div>
+            <div style="background: #a855f7; color: #ffffff; border-radius: 20px; padding: 20px;">
+              <div style="font-size: 34px; font-weight: 600; letter-spacing: -1px; line-height: 1.2;">2</div>
+              <div style="font-size: 13px; opacity: 0.85;">équipes équilibrées</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="flex: 1 1 380px; min-width: 0; width: 100%; border: 1px solid #e5e7eb; border-radius: 24px; padding: clamp(20px, 4vw, 32px); display: flex; flex-direction: column; gap: 24px;">
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">DATE DE LA LAN</label>
+            <input type="date" value="{{ draftDate }}" onChange="{{ onDate }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px; color: #0a0a0a; background: #ffffff;" />
+          </div>
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">JEU</label>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <sc-for list="{{ gameOptions }}" as="g" hint-placeholder-count="3">
+                <button onClick="{{ g.onPick }}" style="{{ g.style }}">
+                  <span style="{{ g.dot }}"></span>
+                  <span>{{ g.label }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ showOther }}">
+            <div>
+              <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">PRÉCISEZ LE JEU</label>
+              <input type="text" placeholder="Age of Empires II…" value="{{ draftOther }}" onChange="{{ onOther }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px;" />
+            </div>
+          </sc-if>
+          <div style="border-top: 1px solid #eaecf0; padding-top: 24px;">
+            <div style="font-size: 13px; color: #8e8e93; margin-bottom: 4px;">NOM DE LA LAN</div>
+            <div style="font-size: 20px; font-weight: 600; letter-spacing: -0.4px; min-height: 28px;">{{ draftName }}</div>
+          </div>
+          <button onClick="{{ createLan }}" style="{{ createStyle }}">{{ createLabel }}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAdmin }}">
+    <div style="max-width: 1080px; margin: 0 auto; padding: clamp(28px, 5vw, 56px) clamp(16px, 4vw, 32px) 96px;">
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-bottom: 40px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <span style="font-size: 13px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px;">ESPACE ADMIN</span>
+            <sc-if value="{{ hasLan }}">
+              <span style="{{ gameChip }}">{{ gameLabel }}</span>
+            </sc-if>
+          </div>
+          <h2 style="font-size: clamp(28px, 6vw, 40px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin: 0;">{{ lanName }}</h2>
+        </div>
+        <sc-if value="{{ hasLan }}">
+          <div class="stack-mobile" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <button onClick="{{ resetLan }}" style="background: transparent; border: 1px solid #e5e7eb; color: #5f5f5f; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 20px; border-radius: 9999px;" style-hover="{borderColor: '#0a0a0a', color: '#0a0a0a'}">Réinitialiser la LAN</button>
+            <sc-if value="{{ adminMissing }}">
+              <button onClick="{{ goInvite }}" style="background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px;" style-hover="{background: '#422e5b'}">Répondre en tant que joueur</button>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ !hasLan }}">
+        <div style="border: 1px dashed #e5e7eb; border-radius: 16px; padding: 48px 24px; text-align: center;">
+          <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Aucune LAN gérée depuis cet appareil</div>
+          <p style="font-size: 14px; color: #5f5f5f; margin: 0 0 20px;">Créez une LAN pour commencer à inviter des joueurs.</p>
+          <button onClick="{{ goHome }}" style="background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px;" style-hover="{background: '#422e5b'}">Créer une LAN</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasLan }}">
+      <div class="stack-mobile" style="{{ inviteBandStyle }}">
+        <div style="flex: 1 1 240px; min-width: 0;">
+          <div style="font-size: 20px; font-weight: 600; margin-bottom: 6px;">Invitez vos joueurs</div>
+          <div style="font-size: 14px; opacity: 0.85;">Partagez ce lien : chacun remplit son formulaire en 20 secondes, et ça remonte automatiquement ici.</div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div style="background: rgba(255,255,255,0.16); border-radius: 9999px; padding: 12px 20px; font-size: 14px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; max-width: 100%; overflow-wrap: anywhere;">{{ inviteLink }}</div>
+          <button onClick="{{ copyLink }}" style="background: #ffffff; color: #0a0a0a; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px; white-space: nowrap;">{{ copyLabel }}</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 40px;">
+        <div style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px;">
+          <div style="font-size: 40px; font-weight: 600; letter-spacing: -1px; line-height: 1.1;">{{ nbPlayers }}</div>
+          <div style="font-size: 14px; color: #5f5f5f; margin-top: 4px;">joueurs inscrits</div>
+        </div>
+        <div style="border-radius: 16px; padding: 24px; background: #fff0ec;">
+          <div style="font-size: 40px; font-weight: 600; letter-spacing: -1px; line-height: 1.1; color: #ff5530;">{{ nbPizza }}</div>
+          <div style="font-size: 14px; color: #5f5f5f; margin-top: 4px;">avec pizza · {{ prixPizza }}€</div>
+        </div>
+        <div style="border-radius: 16px; padding: 24px; background: #eef4ff;">
+          <div style="font-size: 40px; font-weight: 600; letter-spacing: -1px; line-height: 1.1; color: #1456f0;">{{ nbSans }}</div>
+          <div style="font-size: 14px; color: #5f5f5f; margin-top: 4px;">sans pizza · {{ prixSans }}€</div>
+        </div>
+        <div style="border-radius: 16px; padding: 24px; background: #533A71; color: #ffffff;">
+          <div style="font-size: 40px; font-weight: 600; letter-spacing: -1px; line-height: 1.1;">{{ total }}€</div>
+          <div style="font-size: 14px; color: #a8aab2; margin-top: 4px;">à collecter</div>
+        </div>
+      </div>
+
+      <div class="stack-mobile" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+        <h3 style="font-size: 24px; font-weight: 600; margin: 0;">Invités</h3>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <span style="font-size: 14px; color: #8e8e93; white-space: nowrap;">Niveau moyen {{ avgLevel }}/5</span>
+          <button onClick="{{ refreshClick }}" style="background: transparent; border: 1px solid #e5e7eb; cursor: pointer; font-size: 13px; font-weight: 600; padding: 9px 14px; border-radius: 9999px; color: #5f5f5f; white-space: nowrap;" style-hover="{borderColor: '#0a0a0a', color: '#0a0a0a'}">↻ Actualiser</button>
+          <button onClick="{{ showAddPlayer }}" style="background: #f2f3f5; border: 0; cursor: pointer; font-size: 13px; font-weight: 600; padding: 9px 16px; border-radius: 9999px; color: #0a0a0a; white-space: nowrap;" style-hover="{background: '#e5e7eb'}">+ Ajouter un joueur</button>
+        </div>
+      </div>
+
+      <sc-if value="{{ addingPlayer }}">
+        <div style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 20px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1 1 140px;">
+              <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">PRÉNOM</label>
+              <input type="text" value="{{ npPrenom }}" onChange="{{ onNpPrenom }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px;" />
+            </div>
+            <div style="flex: 1 1 140px;">
+              <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">NOM</label>
+              <input type="text" value="{{ npNom }}" onChange="{{ onNpNom }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px;" />
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">FORMULE</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <sc-for list="{{ npFormulaOptions }}" as="o" hint-placeholder-count="2">
+                <button onClick="{{ o.onPick }}" style="{{ o.style }}">{{ o.label }} · {{ o.price }}€</button>
+              </sc-for>
+            </div>
+          </div>
+          <div>
+            <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">NIVEAU</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <sc-for list="{{ npLevelOptions }}" as="l" hint-placeholder-count="5">
+                <button onClick="{{ l.onPick }}" style="{{ l.style }}">{{ l.n }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div class="stack-mobile" style="display: flex; gap: 10px;">
+            <button onClick="{{ cancelAddPlayer }}" style="background: transparent; border: 1px solid #e5e7eb; color: #5f5f5f; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 20px; border-radius: 9999px;" style-hover="{borderColor: '#0a0a0a', color: '#0a0a0a'}">Annuler</button>
+            <button onClick="{{ submitNewPlayer }}" style="{{ addPlayerStyle }}">Ajouter le joueur</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 48px;">
+        <sc-for list="{{ playerRows }}" as="p" hint-placeholder-count="4">
+          <div style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+            <div style="flex: 1 1 200px; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <span style="font-size: 16px; font-weight: 600;">{{ p.name }}</span>
+                <span style="{{ p.tagStyle }}">{{ p.tag }}</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                <span style="{{ p.levelStyle }}">{{ p.level }}</span>
+                <span style="{{ p.levelLabelStyle }}">{{ p.levelLabel }}</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: 0 0 auto;">
+              <span style="{{ p.formulaStyle }}">{{ p.formula }}</span>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 16px; font-weight: 600;">{{ p.amount }}€</span>
+                <button onClick="{{ p.onRemove }}" aria-label="Supprimer ce joueur" style="{{ p.removeStyle }}" style-hover="{background: '#fee2e2', color: '#dc2626'}">✕</button>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ noPlayers }}">
+          <div style="border: 1px dashed #e5e7eb; border-radius: 12px; padding: 40px 16px; text-align: center; color: #8e8e93; font-size: 14px;">Personne n'a encore répondu. Partagez le lien d'invitation.</div>
+        </sc-if>
+      </div>
+
+      <div class="stack-mobile" style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; flex-wrap: wrap; margin-bottom: 20px;">
+        <div>
+          <h3 style="font-size: 24px; font-weight: 600; margin: 0 0 6px;">Tirage au sort</h3>
+          <p style="font-size: 14px; color: #5f5f5f; margin: 0;">Deux équipes équilibrées sur la somme des niveaux déclarés.</p>
+        </div>
+        <button onClick="{{ drawTeams }}" style="{{ drawStyle }}">{{ drawLabel }}</button>
+      </div>
+
+      <sc-if value="{{ hasTeams }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+          <div style="background: #ff5530; color: #ffffff; border-radius: 32px; padding: clamp(20px, 4vw, 32px);">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px;">
+              <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">Équipe Rouge</div>
+              <div style="font-size: 14px; opacity: 0.85;">{{ teamA.score }} pts · moy. {{ teamA.avg }}</div>
+            </div>
+            <sc-for list="{{ teamA.players }}" as="p" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.25); font-size: 16px;">
+                <span style="font-weight: 500;">{{ p.name }}</span>
+                <span style="font-weight: 600;">{{ p.level }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="background: #1456f0; color: #ffffff; border-radius: 32px; padding: clamp(20px, 4vw, 32px);">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px;">
+              <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">Équipe Bleue</div>
+              <div style="font-size: 14px; opacity: 0.85;">{{ teamB.score }} pts · moy. {{ teamB.avg }}</div>
+            </div>
+            <sc-for list="{{ teamB.players }}" as="p" hint-placeholder-count="3">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.25); font-size: 16px;">
+                <span style="font-weight: 500;">{{ p.name }}</span>
+                <span style="font-weight: 600;">{{ p.level }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+      </sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isInvite }}">
+    <div style="max-width: 640px; margin: 0 auto; padding: clamp(28px, 5vw, 56px) clamp(16px, 4vw, 32px) 96px;">
+      <div style="font-size: 13px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px; margin-bottom: 8px;">VOUS ÊTES INVITÉ À</div>
+      <h2 style="font-size: clamp(28px, 6vw, 40px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 40px;">{{ lanName }}</h2>
+
+      <div style="display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap;">
+        <div style="flex: 1 1 140px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">PRÉNOM</label>
+          <input type="text" value="{{ fPrenom }}" onChange="{{ onPrenom }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px;" />
+        </div>
+        <div style="flex: 1 1 140px;">
+          <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">NOM</label>
+          <input type="text" value="{{ fNom }}" onChange="{{ onNom }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px;" />
+        </div>
+      </div>
+
+      <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 12px;">FORMULE</label>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 32px;">
+        <sc-for list="{{ formulaOptions }}" as="f" hint-placeholder-count="2">
+          <button onClick="{{ f.onPick }}" style="{{ f.style }}">
+            <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">{{ f.price }}€</div>
+            <div style="font-size: 16px; font-weight: 500; margin-top: 4px;">{{ f.label }}</div>
+          </button>
+        </sc-for>
+      </div>
+
+      <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 12px;">VOTRE NIVEAU</label>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 40px;">
+        <sc-for list="{{ levelOptions }}" as="l" hint-placeholder-count="5">
+          <button onClick="{{ l.onPick }}" style="{{ l.style }}">
+            <span style="{{ l.numStyle }}">{{ l.n }}</span>
+            <span style="font-size: 15px; font-weight: 500; text-align: left; text-wrap: pretty;">{{ l.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <button onClick="{{ submitPlayer }}" style="{{ submitStyle }}">Valider ma participation</button>
+      <div style="font-size: 13px; color: #8e8e93; margin-top: 12px; text-align: center;">{{ submitHint }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDone }}">
+    <div style="max-width: 560px; margin: 0 auto; padding: clamp(40px, 8vw, 96px) clamp(16px, 4vw, 32px) 96px; text-align: center;">
+      <div style="width: 56px; height: 56px; border-radius: 9999px; background: #e8ffea; color: #1ba673; font-size: 26px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 32px;">✓</div>
+      <h2 style="font-size: clamp(28px, 6vw, 40px); font-weight: 600; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 16px;">C'est noté, {{ lastName }}.</h2>
+      <p style="font-size: 18px; font-weight: 500; color: #5f5f5f; margin: 0 0 40px; text-wrap: pretty;">{{ lastSummary }}</p>
+      <div style="border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; text-align: left; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: #5f5f5f;">LAN</span><span style="font-weight: 500;">{{ lanName }}</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: #5f5f5f;">Niveau déclaré</span><span style="font-weight: 500;">{{ lastLevel }}/5</span></div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: #5f5f5f;">À régler sur place</span><span style="font-weight: 600;">{{ lastAmount }}€</span></div>
+      </div>
+      <div class="stack-mobile" style="display: flex; gap: 12px; justify-content: center;">
+        <button onClick="{{ goInvite }}" style="background: transparent; border: 1px solid #0a0a0a; color: #0a0a0a; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px;">Inscrire quelqu'un d'autre</button>
+        <button onClick="{{ goAdmin }}" style="background: #533A71; color: #ffffff; border: 0; cursor: pointer; font-size: 14px; font-weight: 600; padding: 13px 24px; border-radius: 9999px;" style-hover="{background: '#422e5b'}">Voir l'espace admin</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;prixPizza&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:12,&quot;tsType&quot;:&quot;number&quot;,&quot;unit&quot;:&quot;€&quot;,&quot;section&quot;:&quot;Tarifs&quot;},&quot;prixSans&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5,&quot;tsType&quot;:&quot;number&quot;,&quot;unit&quot;:&quot;€&quot;,&quot;section&quot;:&quot;Tarifs&quot;}}">
+const LEVELS = {
+  1: "J'ai jamais joué à ce foutu jeu",
+  2: "Je connais le jeu mais je suis une pipe",
+  3: "Niveau moyen mais avec quelques faits d'armes",
+  4: "Je finis souvent devant Clément Alix",
+  5: "Je suis Anthony Soulier"
+};
+const GAMES = [
+  { id: 'moh', label: 'Medal of Honor', color: '#ff5530' },
+  { id: 'cs', label: 'Counter-Strike', color: '#1456f0' },
+  { id: 'autre', label: 'Autre jeu', color: '#a855f7' }
+];
+const ADMIN_KEY = 'lan-app-admin-id';
+
+class Component extends DCLogic {
+  state = {
+    screen: 'loading',
+    lanId: null,
+    lan: null,
+    players: [],
+    teams: null,
+    loading: false,
+    drawing: false,
+    actionError: null,
+    copied: false,
+    draftDate: '',
+    draftGame: null,
+    draftOther: '',
+    form: { prenom: '', nom: '', formula: null, level: null, asAdmin: false },
+    last: null,
+    menuOpen: false,
+    addingPlayer: false,
+    np: { prenom: '', nom: '', formula: null, level: null }
+  };
+
+  async componentDidMount() {
+    const params = new URLSearchParams(window.location.search);
+    const adminId = params.get('admin');
+    const joinId = params.get('j');
+
+    if (adminId) {
+      await this.loadLan(adminId, 'admin', true);
+    } else if (joinId) {
+      await this.loadLan(joinId, 'invite', false);
+    } else {
+      let storedId = null;
+      try { storedId = localStorage.getItem(ADMIN_KEY); } catch (e) {}
+      if (storedId) {
+        await this.loadLan(storedId, 'admin', true);
+      } else {
+        this.setState({ screen: 'home' });
+      }
+    }
+
+    this._pollTimer = setInterval(() => {
+      if (this.state.lanId && this.state.screen === 'admin') this.refreshLan();
+    }, 5000);
+  }
+
+  componentWillUnmount() {
+    if (this._pollTimer) clearInterval(this._pollTimer);
+  }
+
+  async loadLan(id, screen, rememberAsAdmin) {
+    this.setState({ screen: 'loading' });
+    try {
+      const res = await fetch('/api/lans/' + id);
+      if (!res.ok) throw new Error('not found');
+      const data = await res.json();
+      if (rememberAsAdmin) {
+        try { localStorage.setItem(ADMIN_KEY, id); } catch (e) {}
+        if (!new URLSearchParams(window.location.search).get('admin')) {
+          history.replaceState(null, '', '?admin=' + id);
+        }
+      }
+      this.setState({
+        lanId: id,
+        lan: { date: data.date, game: data.game },
+        players: data.players || [],
+        teams: data.teams || null,
+        screen: screen,
+        form: { prenom: '', nom: '', formula: null, level: null, asAdmin: false }
+      });
+    } catch (e) {
+      if (rememberAsAdmin) {
+        try { localStorage.removeItem(ADMIN_KEY); } catch (e2) {}
+      }
+      this.setState({ screen: 'notfound', lanId: null, lan: null, players: [], teams: null });
+    }
+  }
+
+  async refreshLan() {
+    if (!this.state.lanId) return;
+    try {
+      const res = await fetch('/api/lans/' + this.state.lanId);
+      if (!res.ok) return;
+      const data = await res.json();
+      this.setState({ players: data.players || [], teams: data.teams || null, lan: { date: data.date, game: data.game } });
+    } catch (e) {}
+  }
+
+  prices() {
+    return [Number(this.props.prixPizza ?? 12), Number(this.props.prixSans ?? 5)];
+  }
+
+  lanName() {
+    const l = this.state.lan;
+    if (!l) return '';
+    return this.dateFr(l.date) + ' · ' + l.game;
+  }
+
+  dateFr(d) {
+    if (!d) return 'Date à définir';
+    const dt = new Date(d + 'T12:00:00');
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  draftGameName() {
+    const g = GAMES.find(x => x.id === this.state.draftGame);
+    if (!g) return null;
+    if (g.id === 'autre') return this.state.draftOther.trim() || null;
+    return g.label;
+  }
+
+  onePass() {
+    const shuffled = [...this.state.players].sort(() => Math.random() - 0.5);
+    shuffled.sort((a, b) => b.level - a.level);
+    const A = [], B = [];
+    let sa = 0, sb = 0;
+    shuffled.forEach(p => {
+      let toA;
+      if (sa !== sb) toA = sa < sb;
+      else if (A.length !== B.length) toA = A.length < B.length;
+      else toA = Math.random() < 0.5;
+      if (toA) { A.push(p); sa += p.level; } else { B.push(p); sb += p.level; }
+    });
+    return { A: A, B: B, sa: sa, sb: sb };
+  }
+
+  balance() {
+    let best = null;
+    for (let i = 0; i < 40; i++) {
+      const r = this.onePass();
+      const gap = Math.abs(r.sa - r.sb) * 10 + Math.abs(r.A.length - r.B.length);
+      if (!best || gap < best.gap) best = { r: r, gap: gap };
+      if (gap === 0 && Math.random() < 0.5) break;
+    }
+    const r = best.r;
+    const shuffleView = arr => [...arr].sort(() => Math.random() - 0.5);
+    const wrap = (arr, s) => ({ players: shuffleView(arr), score: s, avg: arr.length ? (s / arr.length).toFixed(1) : '0.0' });
+    return { a: wrap(r.A, r.sa), b: wrap(r.B, r.sb) };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const [pz, ps] = this.prices();
+    const gameName = this.draftGameName();
+    const canCreate = !!(s.draftDate && gameName);
+    const pill = (on, color) => 'display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;font-size:15px;font-weight:500;padding:13px 16px;border-radius:9999px;background:' + (on ? color : '#ffffff') + ';color:' + (on ? '#ffffff' : '#0a0a0a') + ';border:1px solid ' + (on ? color : '#e5e7eb') + ';';
+    const LVL_COLORS = { 1: '#8e8e93', 2: '#3daeff', 3: '#1456f0', 4: '#a855f7', 5: '#ff5530' };
+    const gameColor = (GAMES.find(g => s.lan && (g.label === s.lan.game)) || GAMES[2]).color;
+    const btn = (enabled) => 'width:100%;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';border:0;border-radius:9999px;font-size:14px;font-weight:600;padding:15px 24px;background:' + (enabled ? '#533A71' : '#e5e7eb') + ';color:' + (enabled ? '#ffffff' : '#a8aab2') + ';';
+
+    const teams = s.teams;
+    const players = s.players;
+    const nbPizza = players.filter(p => p.formula === 'pizza').length;
+    const nbSans = players.length - nbPizza;
+    const f = s.form;
+    const formOk = !!(f.prenom.trim() && f.nom.trim() && f.formula && f.level);
+    const np = s.np;
+    const npOk = !!(np.prenom.trim() && np.nom.trim() && np.formula && np.level);
+
+    return {
+      prixPizza: pz,
+      prixSans: ps,
+      isLoading: s.screen === 'loading',
+      isNotFound: s.screen === 'notfound',
+      isHome: s.screen === 'home',
+      isAdmin: s.screen === 'admin',
+      isInvite: s.screen === 'invite' && !!s.lan,
+      isDone: s.screen === 'done' && !!s.lan,
+      hasLan: !!s.lan,
+      hasError: !!s.actionError,
+      actionError: s.actionError,
+      dismissError: () => this.setState({ actionError: null }),
+      lanName: s.lan ? this.lanName() : 'Aucune LAN pour le moment',
+      gameLabel: s.lan ? s.lan.game : '',
+      gameChip: 'display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:9999px;color:#ffffff;background:' + gameColor + ';',
+      inviteBandStyle: 'border-radius:32px;padding:32px;color:#ffffff;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;margin-bottom:32px;background:' + gameColor + ';',
+      menuOpen: s.menuOpen,
+      menuIcon: s.menuOpen ? '✕' : '☰',
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }),
+      goHome: () => this.setState({ screen: 'home', menuOpen: false }),
+      goAdmin: () => {
+        this.setState({ menuOpen: false });
+        if (s.lanId) {
+          this.setState({ screen: 'admin' });
+          this.refreshLan();
+          if (!new URLSearchParams(window.location.search).get('admin')) {
+            history.replaceState(null, '', '?admin=' + s.lanId);
+          }
+          return;
+        }
+        let storedId = null;
+        try { storedId = localStorage.getItem(ADMIN_KEY); } catch (e) {}
+        if (storedId) { this.loadLan(storedId, 'admin', true); }
+        else { this.setState({ screen: 'admin' }); }
+      },
+      goInvite: () => {
+        this.setState({
+          menuOpen: false,
+          screen: s.lanId ? 'invite' : 'home',
+          form: { prenom: '', nom: '', formula: null, level: null, asAdmin: players.length === 0 }
+        });
+      },
+
+      draftDate: s.draftDate,
+      draftOther: s.draftOther,
+      showOther: s.draftGame === 'autre',
+      draftName: s.draftDate || gameName ? this.dateFr(s.draftDate) + (gameName ? ' · ' + gameName : '') : '—',
+      onDate: e => this.setState({ draftDate: e.target.value }),
+      onOther: e => this.setState({ draftOther: e.target.value }),
+      gameOptions: GAMES.map(g => ({
+        label: g.label,
+        style: pill(s.draftGame === g.id, g.color),
+        dot: 'width:10px;height:10px;border-radius:9999px;background:' + g.color + ';flex:0 0 auto;',
+        onPick: () => this.setState({ draftGame: g.id })
+      })),
+      createStyle: btn(canCreate && !s.loading),
+      createLabel: s.loading ? 'Création…' : 'Créer la LAN',
+      createLan: async () => {
+        if (!canCreate || s.loading) return;
+        this.setState({ loading: true, actionError: null });
+        try {
+          const res = await fetch('/api/lans', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ date: s.draftDate, game: gameName })
+          });
+          if (!res.ok) throw new Error('create failed');
+          const data = await res.json();
+          try { localStorage.setItem(ADMIN_KEY, data.id); } catch (e) {}
+          history.replaceState(null, '', '?admin=' + data.id);
+          this.setState({
+            lanId: data.id,
+            lan: { date: data.date, game: data.game },
+            players: [],
+            teams: null,
+            screen: 'invite',
+            form: { prenom: '', nom: '', formula: null, level: null, asAdmin: true },
+            loading: false
+          });
+        } catch (e) {
+          this.setState({ loading: false, actionError: 'Impossible de créer la LAN. Vérifie ta connexion et réessaie.' });
+        }
+      },
+
+      inviteLink: s.lanId ? (window.location.origin + '/?j=' + s.lanId) : '',
+      copyLabel: s.copied ? 'Lien copié ✓' : 'Copier le lien',
+      copyLink: () => {
+        if (!s.lanId) return;
+        const url = window.location.origin + '/?j=' + s.lanId;
+        try { navigator.clipboard.writeText(url); } catch (e) {}
+        this.setState({ copied: true });
+        setTimeout(() => this.setState({ copied: false }), 1800);
+      },
+
+      refreshClick: () => this.refreshLan(),
+
+      nbPlayers: players.length,
+      nbPizza: nbPizza,
+      nbSans: nbSans,
+      total: nbPizza * pz + nbSans * ps,
+      avgLevel: players.length ? (players.reduce((t, p) => t + p.level, 0) / players.length).toFixed(1) : '—',
+      noPlayers: players.length === 0,
+      adminMissing: !players.some(p => p.asAdmin),
+      playerRows: players.map(p => ({
+        name: p.name,
+        tag: p.asAdmin ? 'ORGA' : 'INVITÉ',
+        tagStyle: 'font-size:11px;font-weight:600;padding:2px 8px;border-radius:9999px;' + (p.asAdmin ? 'background:#f2f3f5;color:#5f5f5f;' : 'background:#eef4ff;color:#1456f0;'),
+        formula: p.formula === 'pizza' ? 'Avec pizza' : 'Sans pizza',
+        formulaStyle: 'font-size:13px;font-weight:600;padding:4px 10px;border-radius:9999px;background:' + (p.formula === 'pizza' ? '#fff0ec' : '#eef4ff') + ';color:' + (p.formula === 'pizza' ? '#ff5530' : '#1456f0') + ';',
+        level: p.level,
+        levelStyle: 'flex:0 0 auto;width:38px;height:38px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#ffffff;background:' + LVL_COLORS[p.level] + ';box-shadow:0 0 0 4px ' + LVL_COLORS[p.level] + '26;',
+        levelLabel: LEVELS[p.level],
+        levelLabelStyle: 'font-size:13px;font-weight:600;margin-top:2px;color:' + LVL_COLORS[p.level] + ';',
+        amount: p.formula === 'pizza' ? pz : ps,
+        removeStyle: 'flex:0 0 auto;width:28px;height:28px;border-radius:9999px;border:0;background:transparent;color:#b0b0b6;font-size:16px;line-height:1;cursor:pointer;',
+        onRemove: async () => {
+          if (!s.lanId) return;
+          try {
+            const res = await fetch('/api/lans/' + s.lanId + '/players/' + p.id, { method: 'DELETE' });
+            if (!res.ok) throw new Error('fail');
+            const data = await res.json();
+            this.setState({ players: data.players || [], teams: data.teams || null });
+          } catch (e) {
+            this.setState({ actionError: 'Suppression impossible. Réessaie.' });
+          }
+        }
+      })),
+
+      addingPlayer: s.addingPlayer,
+      showAddPlayer: () => this.setState({ addingPlayer: true, np: { prenom: '', nom: '', formula: null, level: null } }),
+      cancelAddPlayer: () => this.setState({ addingPlayer: false }),
+      npPrenom: np.prenom,
+      npNom: np.nom,
+      onNpPrenom: e => this.setState({ np: { ...np, prenom: e.target.value } }),
+      onNpNom: e => this.setState({ np: { ...np, nom: e.target.value } }),
+      npFormulaOptions: [
+        { id: 'pizza', label: 'Avec pizza', price: pz, color: '#ff5530' },
+        { id: 'sans', label: 'Sans pizza', price: ps, color: '#1456f0' }
+      ].map(o => ({
+        label: o.label, price: o.price,
+        style: 'cursor:pointer;font-size:14px;font-weight:600;padding:11px 18px;border-radius:9999px;background:' + (np.formula === o.id ? o.color : '#ffffff') + ';color:' + (np.formula === o.id ? '#ffffff' : '#0a0a0a') + ';border:1px solid ' + (np.formula === o.id ? o.color : '#e5e7eb') + ';',
+        onPick: () => this.setState({ np: { ...np, formula: o.id } })
+      })),
+      npLevelOptions: [1, 2, 3, 4, 5].map(n => ({
+        n: n,
+        style: 'width:38px;height:38px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;cursor:pointer;color:' + (np.level === n ? '#ffffff' : '#5f5f5f') + ';background:' + (np.level === n ? LVL_COLORS[n] : '#f2f3f5') + ';border:0;',
+        onPick: () => this.setState({ np: { ...np, level: n } })
+      })),
+      addPlayerStyle: btn(npOk && !s.loading),
+      submitNewPlayer: async () => {
+        if (!npOk || !s.lanId || s.loading) return;
+        this.setState({ loading: true, actionError: null });
+        try {
+          const res = await fetch('/api/lans/' + s.lanId + '/players', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prenom: np.prenom, nom: np.nom, formula: np.formula, level: np.level, asAdmin: false })
+          });
+          if (!res.ok) throw new Error('fail');
+          const data = await res.json();
+          this.setState({
+            players: data.players || [],
+            teams: data.teams || null,
+            addingPlayer: false,
+            np: { prenom: '', nom: '', formula: null, level: null },
+            loading: false
+          });
+        } catch (e) {
+          this.setState({ loading: false, actionError: "Impossible d'ajouter ce joueur. Réessaie." });
+        }
+      },
+
+      hasTeams: !!teams,
+      teamA: teams ? teams.a : { players: [], score: 0, avg: '0.0' },
+      teamB: teams ? teams.b : { players: [], score: 0, avg: '0.0' },
+      resetLan: async () => {
+        if (!s.lanId) return;
+        const id = s.lanId;
+        try { await fetch('/api/lans/' + id + '/reset', { method: 'POST' }); } catch (e) {}
+        try { localStorage.removeItem(ADMIN_KEY); } catch (e) {}
+        history.replaceState(null, '', window.location.pathname);
+        this.setState({
+          screen: 'home', lanId: null, lan: null, players: [], teams: null, last: null,
+          draftDate: '', draftGame: null, draftOther: ''
+        });
+      },
+      drawLabel: s.drawing ? 'Tirage en cours…' : (teams ? 'Relancer le tirage' : 'Lancer le tirage'),
+      drawStyle: 'cursor:' + (players.length >= 2 ? 'pointer' : 'not-allowed') + ';border:0;border-radius:9999px;font-size:14px;font-weight:600;padding:15px 28px;background:' + (players.length >= 2 ? '#533A71' : '#e5e7eb') + ';color:' + (players.length >= 2 ? '#ffffff' : '#a8aab2') + ';',
+      drawTeams: async () => {
+        if (players.length < 2 || s.drawing || !s.lanId) return;
+        this.setState({ drawing: true, actionError: null });
+        const computed = this.balance();
+        try {
+          const res = await fetch('/api/lans/' + s.lanId + '/teams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ teams: computed })
+          });
+          if (!res.ok) throw new Error('fail');
+          const data = await res.json();
+          setTimeout(() => this.setState({ teams: data.teams, drawing: false }), 500);
+        } catch (e) {
+          setTimeout(() => this.setState({ teams: computed, drawing: false, actionError: 'Tirage enregistré localement seulement (erreur réseau).' }), 500);
+        }
+      },
+
+      fPrenom: f.prenom,
+      fNom: f.nom,
+      onPrenom: e => this.setState({ form: { ...f, prenom: e.target.value } }),
+      onNom: e => this.setState({ form: { ...f, nom: e.target.value } }),
+      formulaOptions: [
+        { id: 'pizza', label: 'Avec pizza', hint: 'Pizza + boissons', price: pz },
+        { id: 'sans', label: 'Sans pizza', hint: 'Participation salle', price: ps }
+      ].map(o => ({
+        label: o.label, hint: o.hint, price: o.price,
+        style: 'display:block;text-align:left;cursor:pointer;padding:24px;border-radius:16px;background:' + (f.formula === o.id ? (o.id === 'pizza' ? '#ff5530' : '#1456f0') : '#ffffff') + ';color:' + (f.formula === o.id ? '#ffffff' : '#0a0a0a') + ';border:1px solid ' + (f.formula === o.id ? 'transparent' : '#e5e7eb') + ';',
+        hintStyle: 'font-size:13px;margin-top:2px;color:' + (f.formula === o.id ? 'rgba(255,255,255,0.8)' : '#8e8e93') + ';',
+        onPick: () => this.setState({ form: { ...f, formula: o.id } })
+      })),
+      levelOptions: [1, 2, 3, 4, 5].map(n => ({
+        n: n, label: LEVELS[n],
+        style: 'display:flex;align-items:center;gap:14px;width:100%;cursor:pointer;padding:14px 16px;border-radius:12px;background:#ffffff;color:#0a0a0a;border:1px solid ' + (f.level === n ? LVL_COLORS[n] : '#e5e7eb') + ';box-shadow:' + (f.level === n ? 'inset 0 0 0 1px ' + LVL_COLORS[n] : 'none') + ';',
+        numStyle: 'flex:0 0 auto;width:28px;height:28px;border-radius:9999px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:' + (f.level === n ? LVL_COLORS[n] : '#f2f3f5') + ';color:' + (f.level === n ? '#ffffff' : '#5f5f5f') + ';',
+        onPick: () => this.setState({ form: { ...f, level: n } })
+      })),
+      submitStyle: btn(formOk && !s.loading),
+      submitHint: s.loading ? 'Envoi en cours…' : (formOk ? 'Vos réponses seront visibles par l’organisateur.' : 'Nom, prénom, formule et niveau sont requis.'),
+      submitPlayer: async () => {
+        if (!formOk || !s.lanId || s.loading) return;
+        this.setState({ loading: true, actionError: null });
+        try {
+          const res = await fetch('/api/lans/' + s.lanId + '/players', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prenom: f.prenom, nom: f.nom, formula: f.formula, level: f.level, asAdmin: f.asAdmin })
+          });
+          if (!res.ok) throw new Error('fail');
+          const data = await res.json();
+          const created = data.players && data.players.length ? data.players[data.players.length - 1] : null;
+          this.setState({
+            players: data.players || [],
+            teams: data.teams || null,
+            screen: 'done',
+            last: created,
+            form: { prenom: '', nom: '', formula: null, level: null, asAdmin: false },
+            loading: false
+          });
+        } catch (e) {
+          this.setState({ loading: false, actionError: "Impossible d'enregistrer ta réponse. Vérifie ta connexion et réessaie." });
+        }
+      },
+
+      lastName: s.last ? s.last.name.split(' ')[0] : '',
+      lastLevel: s.last ? s.last.level : '',
+      lastAmount: s.last ? (s.last.formula === 'pizza' ? pz : ps) : '',
+      lastSummary: s.last ? (s.last.formula === 'pizza' ? 'Pizza réservée. On se retrouve pour la partie.' : 'Sans pizza — prends de quoi grignoter.') : ''
+    };
+  }
+}
+
+</script>
+</body>
+</html>
