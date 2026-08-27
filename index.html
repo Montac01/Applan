@@ -102,6 +102,7 @@
         </div>
 
         <div style="flex: 1 1 380px; min-width: 0; width: 100%; border: 1px solid #e5e7eb; border-radius: 24px; padding: clamp(20px, 4vw, 32px); display: flex; flex-direction: column; gap: 24px;">
+          <h2 style="font-size: 20px; font-weight: 600; letter-spacing: -0.3px; margin: 0;">Créer une nouvelle LAN</h2>
           <div>
             <label style="display: block; font-size: 13px; font-weight: 600; color: #5f5f5f; margin-bottom: 8px;">DATE DE LA LAN</label>
             <input type="date" value="{{ draftDate }}" onChange="{{ onDate }}" style="width: 100%; height: 44px; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 16px; color: #0a0a0a; background: #ffffff;" />
@@ -130,6 +131,20 @@
           <button onClick="{{ createLan }}" style="{{ createStyle }}">{{ createLabel }}</button>
         </div>
       </div>
+
+      <sc-if value="{{ hasHistory }}">
+        <div style="margin-top: clamp(48px, 8vw, 80px);">
+          <h2 style="font-size: 24px; font-weight: 600; letter-spacing: -0.3px; margin: 0 0 16px;">Historique des LAN</h2>
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <sc-for list="{{ historyRows }}" as="h" hint-placeholder-count="2">
+              <button onClick="{{ h.onOpen }}" style="width: 100%; text-align: left; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;" style-hover="{borderColor: '#0a0a0a'}">
+                <span style="font-size: 15px; font-weight: 600;">{{ h.label }}</span>
+                <span style="font-size: 13px; color: #8e8e93;">Ouvrir →</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -156,6 +171,19 @@
       </div>
 
       <sc-if value="{{ !hasLan }}">
+        <sc-if value="{{ hasHistory }}">
+          <div style="margin-bottom: 20px;">
+            <div style="font-size: 13px; font-weight: 600; color: #8e8e93; letter-spacing: 0.4px; margin-bottom: 10px;">LAN PRÉCÉDENTES</div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <sc-for list="{{ historyRows }}" as="h" hint-placeholder-count="2">
+                <button onClick="{{ h.onOpen }}" style="width: 100%; text-align: left; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px;" style-hover="{borderColor: '#0a0a0a'}">
+                  <span style="font-size: 14px; font-weight: 600;">{{ h.label }}</span>
+                  <span style="font-size: 13px; color: #8e8e93;">Ouvrir →</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
         <div style="border: 1px dashed #e5e7eb; border-radius: 16px; padding: 48px 24px; text-align: center;">
           <div style="font-size: 16px; font-weight: 600; margin-bottom: 8px;">Aucune LAN gérée depuis cet appareil</div>
           <p style="font-size: 14px; color: #5f5f5f; margin: 0 0 20px;">Créez une LAN pour commencer à inviter des joueurs.</p>
@@ -246,10 +274,21 @@
                 <span style="font-size: 16px; font-weight: 600;">{{ p.name }}</span>
                 <span style="{{ p.tagStyle }}">{{ p.tag }}</span>
               </div>
-              <div style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
-                <span style="{{ p.levelStyle }}">{{ p.level }}</span>
-                <span style="{{ p.levelLabelStyle }}">{{ p.levelLabel }}</span>
-              </div>
+              <sc-if value="{{ p.isEditingLevel }}">
+                <div style="display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap;">
+                  <sc-for list="{{ p.levelPickerOptions }}" as="lp" hint-placeholder-count="5">
+                    <button onClick="{{ lp.onPick }}" style="{{ lp.style }}">{{ lp.n }}</button>
+                  </sc-for>
+                  <button onClick="{{ p.onCancelEditLevel }}" style="background: transparent; border: 0; cursor: pointer; color: #8e8e93; font-size: 13px; font-weight: 600; padding: 4px 8px;">Annuler</button>
+                </div>
+              </sc-if>
+              <sc-if value="{{ !p.isEditingLevel }}">
+                <button onClick="{{ p.onStartEditLevel }}" style="display: flex; align-items: center; gap: 8px; margin-top: 10px; background: transparent; border: 0; padding: 0; cursor: pointer; text-align: left;">
+                  <span style="{{ p.levelStyle }}">{{ p.level }}</span>
+                  <span style="{{ p.levelLabelStyle }}">{{ p.levelLabel }}</span>
+                  <span style="font-size: 11px; color: #b0b0b6; font-weight: 600;">✎ modifier</span>
+                </button>
+              </sc-if>
             </div>
             <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex: 0 0 auto;">
               <span style="{{ p.formulaStyle }}">{{ p.formula }}</span>
@@ -275,10 +314,18 @@
 
       <sc-if value="{{ hasTeams }}">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
-          <div style="background: #ff5530; color: #ffffff; border-radius: 32px; padding: clamp(20px, 4vw, 32px);">
-            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px;">
+          <div style="{{ teamA.cardStyle }}">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
               <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">Équipe Rouge</div>
-              <div style="font-size: 14px; opacity: 0.85;">{{ teamA.score }} pts · moy. {{ teamA.avg }}</div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-size: 14px; opacity: 0.85; white-space: nowrap;">{{ teamA.score }} pts · moy. {{ teamA.avg }}</div>
+                <sc-if value="{{ teamA.isWinner }}">
+                  <span style="background: rgba(255,255,255,0.25); font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 9999px; white-space: nowrap;">🏆 Vainqueur</span>
+                </sc-if>
+                <sc-if value="{{ !teamA.isWinner }}">
+                  <button onClick="{{ teamA.onSetWinner }}" style="background: rgba(255,255,255,0.16); border: 0; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 9999px; cursor: pointer; white-space: nowrap;">Marquer vainqueur</button>
+                </sc-if>
+              </div>
             </div>
             <sc-for list="{{ teamA.players }}" as="p" hint-placeholder-count="3">
               <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.25); font-size: 16px;">
@@ -287,10 +334,18 @@
               </div>
             </sc-for>
           </div>
-          <div style="background: #1456f0; color: #ffffff; border-radius: 32px; padding: clamp(20px, 4vw, 32px);">
-            <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px;">
+          <div style="{{ teamB.cardStyle }}">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;">
               <div style="font-size: 32px; font-weight: 600; letter-spacing: -0.5px;">Équipe Bleue</div>
-              <div style="font-size: 14px; opacity: 0.85;">{{ teamB.score }} pts · moy. {{ teamB.avg }}</div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="font-size: 14px; opacity: 0.85; white-space: nowrap;">{{ teamB.score }} pts · moy. {{ teamB.avg }}</div>
+                <sc-if value="{{ teamB.isWinner }}">
+                  <span style="background: rgba(255,255,255,0.25); font-size: 13px; font-weight: 700; padding: 5px 10px; border-radius: 9999px; white-space: nowrap;">🏆 Vainqueur</span>
+                </sc-if>
+                <sc-if value="{{ !teamB.isWinner }}">
+                  <button onClick="{{ teamB.onSetWinner }}" style="background: rgba(255,255,255,0.16); border: 0; color: #ffffff; font-size: 12px; font-weight: 600; padding: 6px 10px; border-radius: 9999px; cursor: pointer; white-space: nowrap;">Marquer vainqueur</button>
+                </sc-if>
+              </div>
             </div>
             <sc-for list="{{ teamB.players }}" as="p" hint-placeholder-count="3">
               <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid rgba(255,255,255,0.25); font-size: 16px;">
@@ -379,6 +434,7 @@ const GAMES = [
   { id: 'autre', label: 'Autre jeu', color: '#a855f7' }
 ];
 const ADMIN_KEY = 'lan-app-admin-id';
+const HISTORY_KEY = 'lan-app-history';
 
 class Component extends DCLogic {
   state = {
@@ -398,7 +454,8 @@ class Component extends DCLogic {
     last: null,
     menuOpen: false,
     addingPlayer: false,
-    np: { prenom: '', nom: '', formula: null, level: null }
+    np: { prenom: '', nom: '', formula: null, level: null },
+    editingLevelId: null
   };
 
   async componentDidMount() {
@@ -453,6 +510,7 @@ class Component extends DCLogic {
       if (rememberAsAdmin) {
         try { localStorage.removeItem(ADMIN_KEY); } catch (e2) {}
       }
+      this.removeHistory(id);
       this.setState({ screen: 'notfound', lanId: null, lan: null, players: [], teams: null });
     }
   }
@@ -464,6 +522,25 @@ class Component extends DCLogic {
       if (!res.ok) return;
       const data = await res.json();
       this.setState({ players: data.players || [], teams: data.teams || null, lan: { date: data.date, game: data.game } });
+    } catch (e) {}
+  }
+
+  getHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (e) { return []; }
+  }
+
+  pushHistory(entry) {
+    try {
+      const list = this.getHistory().filter(h => h.id !== entry.id);
+      list.unshift(entry);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, 20)));
+    } catch (e) {}
+  }
+
+  removeHistory(id) {
+    try {
+      const list = this.getHistory().filter(h => h.id !== id);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
     } catch (e) {}
   }
 
@@ -531,6 +608,23 @@ class Component extends DCLogic {
     const btn = (enabled) => 'width:100%;cursor:' + (enabled ? 'pointer' : 'not-allowed') + ';border:0;border-radius:9999px;font-size:14px;font-weight:600;padding:15px 24px;background:' + (enabled ? '#533A71' : '#e5e7eb') + ';color:' + (enabled ? '#ffffff' : '#a8aab2') + ';';
 
     const teams = s.teams;
+    const setWinner = async (side) => {
+      if (!s.lanId || !teams) return;
+      const updated = { ...teams, winner: teams.winner === side ? null : side };
+      try {
+        const res = await fetch('/api/lans/' + s.lanId + '/teams', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ teams: updated })
+        });
+        if (!res.ok) throw new Error('fail');
+        const data = await res.json();
+        this.setState({ teams: data.teams || null });
+      } catch (e) {
+        this.setState({ actionError: 'Impossible d’enregistrer la victoire. Réessaie.' });
+      }
+    };
+    const teamCardStyle = (color, isWinner) => 'background:' + color + ';color:#ffffff;border-radius:32px;padding:clamp(20px, 4vw, 32px);' + (isWinner ? 'box-shadow:0 0 0 4px rgba(255,255,255,0.6);' : '');
     const players = s.players;
     const nbPizza = players.filter(p => p.formula === 'pizza').length;
     const nbSans = players.length - nbPizza;
@@ -538,6 +632,7 @@ class Component extends DCLogic {
     const formOk = !!(f.prenom.trim() && f.nom.trim() && f.formula && f.level);
     const np = s.np;
     const npOk = !!(np.prenom.trim() && np.nom.trim() && np.formula && np.level);
+    const historyList = this.getHistory();
 
     return {
       prixPizza: pz,
@@ -549,6 +644,11 @@ class Component extends DCLogic {
       isInvite: s.screen === 'invite' && !!s.lan,
       isDone: s.screen === 'done' && !!s.lan,
       hasLan: !!s.lan,
+      hasHistory: historyList.length > 0,
+      historyRows: historyList.map(h => ({
+        label: this.dateFr(h.date) + ' · ' + h.game,
+        onOpen: () => this.loadLan(h.id, 'admin', true)
+      })),
       hasError: !!s.actionError,
       actionError: s.actionError,
       dismissError: () => this.setState({ actionError: null }),
@@ -609,6 +709,7 @@ class Component extends DCLogic {
           if (!res.ok) throw new Error('create failed');
           const data = await res.json();
           try { localStorage.setItem(ADMIN_KEY, data.id); } catch (e) {}
+          this.pushHistory({ id: data.id, date: data.date, game: data.game });
           history.replaceState(null, '', '?admin=' + data.id);
           this.setState({
             lanId: data.id,
@@ -665,7 +766,29 @@ class Component extends DCLogic {
           } catch (e) {
             this.setState({ actionError: 'Suppression impossible. Réessaie.' });
           }
-        }
+        },
+        isEditingLevel: s.editingLevelId === p.id,
+        onStartEditLevel: () => this.setState({ editingLevelId: p.id }),
+        onCancelEditLevel: () => this.setState({ editingLevelId: null }),
+        levelPickerOptions: [1, 2, 3, 4, 5].map(n => ({
+          n: n,
+          style: 'width:32px;height:32px;border-radius:9999px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;cursor:pointer;border:0;color:' + (n === p.level ? '#ffffff' : '#5f5f5f') + ';background:' + (n === p.level ? LVL_COLORS[n] : '#f2f3f5') + ';',
+          onPick: async () => {
+            if (!s.lanId) return;
+            try {
+              const res = await fetch('/api/lans/' + s.lanId + '/players/' + p.id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ level: n })
+              });
+              if (!res.ok) throw new Error('fail');
+              const data = await res.json();
+              this.setState({ players: data.players || [], teams: data.teams || null, editingLevelId: null });
+            } catch (e) {
+              this.setState({ actionError: 'Impossible de modifier le niveau. Réessaie.' });
+            }
+          }
+        }))
       })),
 
       addingPlayer: s.addingPlayer,
@@ -713,13 +836,18 @@ class Component extends DCLogic {
       },
 
       hasTeams: !!teams,
-      teamA: teams ? teams.a : { players: [], score: 0, avg: '0.0' },
-      teamB: teams ? teams.b : { players: [], score: 0, avg: '0.0' },
+      teamA: teams
+        ? { ...teams.a, cardStyle: teamCardStyle('#ff5530', teams.winner === 'a'), isWinner: teams.winner === 'a', onSetWinner: () => setWinner('a') }
+        : { players: [], score: 0, avg: '0.0', cardStyle: teamCardStyle('#ff5530', false), isWinner: false, onSetWinner: () => {} },
+      teamB: teams
+        ? { ...teams.b, cardStyle: teamCardStyle('#1456f0', teams.winner === 'b'), isWinner: teams.winner === 'b', onSetWinner: () => setWinner('b') }
+        : { players: [], score: 0, avg: '0.0', cardStyle: teamCardStyle('#1456f0', false), isWinner: false, onSetWinner: () => {} },
       resetLan: async () => {
         if (!s.lanId) return;
         const id = s.lanId;
         try { await fetch('/api/lans/' + id + '/reset', { method: 'POST' }); } catch (e) {}
         try { localStorage.removeItem(ADMIN_KEY); } catch (e) {}
+        this.removeHistory(id);
         history.replaceState(null, '', window.location.pathname);
         this.setState({
           screen: 'home', lanId: null, lan: null, players: [], teams: null, last: null,
@@ -732,6 +860,7 @@ class Component extends DCLogic {
         if (players.length < 2 || s.drawing || !s.lanId) return;
         this.setState({ drawing: true, actionError: null });
         const computed = this.balance();
+        computed.winner = null;
         try {
           const res = await fetch('/api/lans/' + s.lanId + '/teams', {
             method: 'POST',
